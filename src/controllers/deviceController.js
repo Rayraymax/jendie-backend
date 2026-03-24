@@ -6,8 +6,7 @@ const { Op } = require("sequelize");
 exports.getDevices = async (req, res) => {
   try {
     const { search, status } = req.query;
-
-    let where = {};
+    const where = {};
 
     if (status) where.status = status;
 
@@ -21,12 +20,13 @@ exports.getDevices = async (req, res) => {
 
     const devices = await Device.findAll({
       where,
-      order: [["created_at", "DESC"]],
+      order: [["createdAt", "DESC"]], // ✅ use correct Sequelize field
     });
 
     res.json(devices);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Error fetching devices:", err);
+    res.status(500).json({ error: "Failed to fetch devices" });
   }
 };
 
@@ -35,13 +35,12 @@ exports.getDevice = async (req, res) => {
   try {
     const device = await Device.findByPk(req.params.id);
 
-    if (!device) {
-      return res.status(404).json({ message: "Device not found" });
-    }
+    if (!device) return res.status(404).json({ message: "Device not found" });
 
     res.json(device);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Error fetching device:", err);
+    res.status(500).json({ error: "Failed to fetch device" });
   }
 };
 
@@ -53,9 +52,10 @@ exports.createDevice = async (req, res) => {
       status: "Received", // default on intake
     });
 
-    res.json(device);
+    res.status(201).json(device);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Error creating device:", err);
+    res.status(500).json({ error: "Failed to create device" });
   }
 };
 
@@ -64,15 +64,14 @@ exports.updateDevice = async (req, res) => {
   try {
     const device = await Device.findByPk(req.params.id);
 
-    if (!device) {
-      return res.status(404).json({ message: "Device not found" });
-    }
+    if (!device) return res.status(404).json({ message: "Device not found" });
 
     await device.update(req.body);
 
     res.json(device);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Error updating device:", err);
+    res.status(500).json({ error: "Failed to update device" });
   }
 };
 
@@ -82,10 +81,7 @@ exports.returnDevice = async (req, res) => {
     const { returnedDate, returnedBy, notes } = req.body;
 
     const device = await Device.findByPk(req.params.id);
-
-    if (!device) {
-      return res.status(404).json({ message: "Device not found" });
-    }
+    if (!device) return res.status(404).json({ message: "Device not found" });
 
     // Create return record
     await DeviceReturn.create({
@@ -100,6 +96,7 @@ exports.returnDevice = async (req, res) => {
 
     res.json({ message: "Device returned successfully" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Error returning device:", err);
+    res.status(500).json({ error: "Failed to return device" });
   }
 };

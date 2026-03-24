@@ -4,10 +4,11 @@ const app = express();
 const sequelize = require("../config/db");
 const cors = require("cors");
 
-// 🔹 Allow your frontend to access backend
+// 🔹 Allow frontend access
 const allowedOrigins = [
   "http://localhost:5173", // local frontend
-  "https://your-lovable-frontend.lovable.app" // replace with your Lovable URL
+  "https://id-preview--270fdbb4-4638-4113-87a9-814ba7b82b47.lovable.app", // your Lovable URL
+  "https://jendie-frontend.onrender.com" // if you deploy frontend later
 ];
 
 app.use(cors({
@@ -28,19 +29,29 @@ const returnRoutes = require("./routes/returns");
 // 🔹 API Prefixes
 app.use("/api/auth", authRoutes);
 app.use("/api/devices", deviceRoutes);
-app.use("/api/devices", repairRoutes); // device-specific repair logs
+app.use("/api/devices/repairs", repairRoutes); // device-specific repair logs
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/returns", returnRoutes);  // device returns
-app.use("/api/repairs", repairRoutes);  // global repair logs
+app.use("/api/returns", returnRoutes);
+app.use("/api/repairs", repairRoutes); // global repair logs
 
-// 🔹 Start Server
+// 🔹 Test route
+app.get("/", (req, res) => {
+  res.send("✅ Jendie Backend is running!");
+});
+
+// 🔹 Start server
 const PORT = process.env.PORT || 5000;
 
-sequelize.authenticate()
-  .then(() => console.log("Database connected"))
-  .then(() => sequelize.sync({ alter: true })) // sync models to DB
-  .then(() => console.log("All tables synced"))
-  .catch(err => console.error("DB error:", err));
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("Database connected successfully!");
+    await sequelize.sync({ alter: true });
+    console.log("All tables synced");
+    
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  } catch (err) {
+    console.error("DB connection failed:", err);
+  }
+})();
