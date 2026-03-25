@@ -6,13 +6,22 @@ const cors = require("cors");
 
 // 🔹 Allow frontend access
 const allowedOrigins = [
-  "http://localhost:5173", // local frontend
-  "https://id-preview--270fdbb4-4638-4113-87a9-814ba7b82b47.lovable.app", // your Lovable URL
-  "https://jendie-frontend.onrender.com" // if you deploy frontend later
+  "http://localhost:5173",
+  "https://id-preview--270fdbb4-4638-4113-87a9-814ba7b82b47.lovable.app",
+  "https://jendie-frontend.onrender.com"
 ];
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // allow requests with no origin (like Postman)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed"));
+    }
+  },
   credentials: true,
 }));
 
@@ -29,29 +38,35 @@ const returnRoutes = require("./routes/returns");
 // 🔹 API Prefixes
 app.use("/api/auth", authRoutes);
 app.use("/api/devices", deviceRoutes);
-app.use("/api/devices/repairs", repairRoutes); // device-specific repair logs
+app.use("/api/devices/repairs", repairRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/returns", returnRoutes);
-app.use("/api/repairs", repairRoutes); // global repair logs
+app.use("/api/repairs", repairRoutes);
 
-// 🔹 Test route
+// 🔹 Health check route
 app.get("/", (req, res) => {
   res.send("✅ Jendie Backend is running!");
 });
 
-// 🔹 Start server
+// 🔹 Start server (SAFE VERSION)
 const PORT = process.env.PORT || 5000;
 
 (async () => {
   try {
     await sequelize.authenticate();
-    console.log("Database connected successfully!");
+    console.log("✅ Database connected");
+
     await sequelize.sync({ alter: true });
-    console.log("All tables synced");
-    
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    console.log("✅ Tables synced");
+
   } catch (err) {
-    console.error("DB connection failed:", err);
+    console.error("❌ Database connection failed:", err.message);
+    // ⚠️ Do NOT crash app
   }
+
+  // ✅ Always start server
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
 })();
