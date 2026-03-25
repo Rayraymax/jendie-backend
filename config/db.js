@@ -2,7 +2,10 @@
 const { Sequelize } = require("sequelize");
 require("dotenv").config({ override: true }); // ensure .env values are loaded
 
-// 🔹 If Render provides DATABASE_URL, use it (with SSL)
+// 🔹 Log which DB we are using
+console.log("Connecting to database with:", process.env.DATABASE_URL || process.env.DB_HOST);
+
+// 🔹 Create Sequelize instance
 const sequelize = process.env.DATABASE_URL
   ? new Sequelize(process.env.DATABASE_URL, {
       dialect: "postgres",
@@ -10,10 +13,10 @@ const sequelize = process.env.DATABASE_URL
       dialectOptions: {
         ssl: {
           require: true,
-          rejectUnauthorized: false, // allow self-signed certs
+          rejectUnauthorized: false, // allow self-signed certs (Render Postgres)
         },
       },
-      logging: false,
+      logging: console.log, // show SQL queries for debugging
     })
   : new Sequelize(
       process.env.DB_NAME,
@@ -23,7 +26,7 @@ const sequelize = process.env.DATABASE_URL
         host: process.env.DB_HOST,
         port: process.env.DB_PORT || 5432,
         dialect: "postgres",
-        logging: false, // change to console.log to debug queries
+        logging: console.log, // show SQL queries for debugging
       }
     );
 

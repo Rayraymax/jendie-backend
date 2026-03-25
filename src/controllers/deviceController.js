@@ -10,23 +10,22 @@ exports.getDevices = async (req, res) => {
 
     if (status) where.status = status;
 
-    // 🔹 Search logic safe for all environments
     if (search) {
       where[Op.or] = [
-        { serialNumber: { [Op.like]: `%${search}%` } },
-        { client: { [Op.like]: `%${search}%` } },
-        { model: { [Op.like]: `%${search}%` } },
+        { serialNumber: { [Op.iLike]: `%${search}%` } }, // case-insensitive for Postgres
+        { client: { [Op.iLike]: `%${search}%` } },
+        { model: { [Op.iLike]: `%${search}%` } },
       ];
     }
 
     const devices = await Device.findAll({
       where,
-      order: [["createdAt", "DESC"]], // ✅ use correct Sequelize field
+      order: [["createdAt", "DESC"]], // Sequelize default timestamp
     });
 
     res.json(devices);
   } catch (err) {
-    console.error("Error fetching devices:", err);
+    console.error("❌ Error fetching devices:", err);
     res.status(500).json({ error: "Failed to fetch devices" });
   }
 };
@@ -40,7 +39,7 @@ exports.getDevice = async (req, res) => {
 
     res.json(device);
   } catch (err) {
-    console.error("Error fetching device:", err);
+    console.error("❌ Error fetching device:", err);
     res.status(500).json({ error: "Failed to fetch device" });
   }
 };
@@ -55,7 +54,7 @@ exports.createDevice = async (req, res) => {
 
     res.status(201).json(device);
   } catch (err) {
-    console.error("Error creating device:", err);
+    console.error("❌ Error creating device:", err);
     res.status(500).json({ error: "Failed to create device" });
   }
 };
@@ -71,7 +70,7 @@ exports.updateDevice = async (req, res) => {
 
     res.json(device);
   } catch (err) {
-    console.error("Error updating device:", err);
+    console.error("❌ Error updating device:", err);
     res.status(500).json({ error: "Failed to update device" });
   }
 };
@@ -97,7 +96,7 @@ exports.returnDevice = async (req, res) => {
 
     res.json({ message: "Device returned successfully" });
   } catch (err) {
-    console.error("Error returning device:", err);
+    console.error("❌ Error returning device:", err);
     res.status(500).json({ error: "Failed to return device" });
   }
 };

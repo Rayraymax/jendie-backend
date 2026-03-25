@@ -49,23 +49,23 @@ app.get("/", (req, res) => {
   res.send("✅ Jendie Backend is running!");
 });
 
-// 🔹 Start server (SAFE VERSION)
+// 🔹 Start server safely after DB connection
 const PORT = process.env.PORT || 5000;
 
 (async () => {
   try {
     await sequelize.authenticate();
-    console.log("✅ Database connected");
+    console.log("✅ Database connected successfully!");
 
     await sequelize.sync({ alter: true });
-    console.log("✅ Tables synced");
+    console.log("✅ All tables synced");
 
   } catch (err) {
     console.error("❌ Database connection failed:", err.message);
-    // ⚠️ Do NOT crash app
+    // ⚠️ Do NOT crash the app
   }
 
-  // ✅ Always start server
+  // ✅ Always start server regardless of DB status
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
