@@ -45,17 +45,32 @@ exports.getDevice = async (req, res) => {
 };
 
 // 🔹 CREATE DEVICE (INTAKE)
+// 🔹 CREATE DEVICE (FIXED WITH DEFAULTS)
 exports.createDevice = async (req, res) => {
   try {
     const device = await Device.create({
-      ...req.body,
-      status: "Received", // default on intake
+      serialNumber: req.body.serialNumber,
+      type: req.body.type,
+      model: req.body.model,
+      client: req.body.client,
+      clientPhone: req.body.clientPhone,
+
+      // ✅ FIXED FIELDS
+      receivedDate: req.body.receivedDate || new Date(),
+      assignedEngineer: req.body.assignedEngineer || "Unassigned",
+      priority: req.body.priority || "Normal",
+
+      // optional
+      region: req.body.region || null,
+      notes: req.body.notes || null,
+
+      status: "Received",
     });
 
     res.status(201).json(device);
   } catch (err) {
-    console.error("❌ Error creating device:", err);
-    res.status(500).json({ error: "Failed to create device" });
+    console.error("❌ CREATE ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
 };
 
