@@ -20,7 +20,7 @@ exports.getDevices = async (req, res) => {
 
     const devices = await Device.findAll({
       where,
-      order: [["createdAt", "DESC"]], // Sequelize default timestamp
+      order: [["created_at", "DESC"]], // Sequelize default timestamp
     });
 
     res.json(devices);
