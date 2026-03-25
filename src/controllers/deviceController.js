@@ -2,6 +2,18 @@
 const { Device, DeviceReturn } = require("../models");
 const { Op } = require("sequelize");
 
+// 🔥 Map frontend values → DB ENUM values
+const mapDeviceType = (type) => {
+  if (!type) return "Telematics";
+
+  const t = type.toLowerCase();
+
+  if (t.includes("telematics")) return "Telematics";
+  if (t.includes("speed")) return "Speed Governor";
+
+  return "Telematics"; // fallback
+};
+
 // 🔹 GET ALL DEVICES (with search + filters)
 exports.getDevices = async (req, res) => {
   try {
@@ -12,7 +24,7 @@ exports.getDevices = async (req, res) => {
 
     if (search) {
       where[Op.or] = [
-        { serialNumber: { [Op.iLike]: `%${search}%` } }, // case-insensitive for Postgres
+        { serialNumber: { [Op.iLike]: `%${search}%` } },
         { client: { [Op.iLike]: `%${search}%` } },
         { model: { [Op.iLike]: `%${search}%` } },
       ];
@@ -20,7 +32,7 @@ exports.getDevices = async (req, res) => {
 
     const devices = await Device.findAll({
       where,
-      order: [["created_at", "DESC"]], // Sequelize default timestamp
+      order: [["created_at", "DESC"]], // ✅ matches your DB
     });
 
     res.json(devices);
@@ -44,21 +56,20 @@ exports.getDevice = async (req, res) => {
   }
 };
 
-// 🔹 CREATE DEVICE (INTAKE)
-// 🔹 CREATE DEVICE (FIXED WITH DEFAULTS)
+// 🔹 CREATE DEVICE (INTAKE - FINAL FIXED)
 exports.createDevice = async (req, res) => {
   try {
     const device = await Device.create({
       serialNumber: req.body.serialNumber,
-      type: req.body.type,
+      type: mapDeviceType(req.body.type), // ✅ ENUM FIX
       model: req.body.model,
       client: req.body.client,
       clientPhone: req.body.clientPhone,
 
-      // ✅ FIXED FIELDS
+      // ✅ required fields with safe defaults
       receivedDate: req.body.receivedDate || new Date(),
       assignedEngineer: req.body.assignedEngineer || "Unassigned",
-      priority: req.body.priority || "Normal",
+      priority: req.body.priority || "Medium",
 
       // optional
       region: req.body.region || null,
@@ -81,7 +92,10 @@ exports.updateDevice = async (req, res) => {
 
     if (!device) return res.status(404).json({ message: "Device not found" });
 
-    await device.update(req.body);
+    await device.update({
+      ...req.body,
+      type: req.body.type ? mapDeviceType(req.body.type) : device.type, // ✅ keep enum safe
+    });
 
     res.json(device);
   } catch (err) {
