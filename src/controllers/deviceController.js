@@ -10,11 +10,12 @@ exports.getDevices = async (req, res) => {
 
     if (status) where.status = status;
 
+    // 🔹 Search logic safe for all environments
     if (search) {
       where[Op.or] = [
-        { serialNumber: { [Op.iLike]: `%${search}%` } },
-        { client: { [Op.iLike]: `%${search}%` } },
-        { model: { [Op.iLike]: `%${search}%` } },
+        { serialNumber: { [Op.like]: `%${search}%` } },
+        { client: { [Op.like]: `%${search}%` } },
+        { model: { [Op.like]: `%${search}%` } },
       ];
     }
 
